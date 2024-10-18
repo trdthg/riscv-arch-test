@@ -318,7 +318,7 @@ class Translator:
     def resolve_list_braces(self, replacement_dict):
 
         for key, val in replacement_dict.items():
-            if ("LIST" in key) and (not "LIST_INDEX" in key):
+            if ("LIST" in key) and ("LIST_INDEX" not in key):
                 val_list = [num.strip() if num.strip().isdigit() else num.strip() for num in val[1:-1].split(',')]
                 repeat_list = [value for value in val_list if "..." in value]
 
@@ -348,7 +348,7 @@ class Translator:
             None
         """
         for key, val in replacement_dict.items():
-            if "MULTI" in key and not "MULTI_INTER" in key :
+            if "MULTI" in key and "MULTI_INTER" not in key :
                 range_match = re.search(r'{(\d+)\s*\.\.\.\s*(\d+)}', val)
                 operation_match = re.search(r'([+\-*/%]|<<|>>)\s*(\d+)', val)
                 comma_sep_num = re.findall(r'\{\d+(?:, \d+)*\}', val)
@@ -421,7 +421,7 @@ class Translator:
                 if "LIST" in key:
                     try:
                         req_element_list.append(val[resolved_list_index[index]])
-                    except IndexError as e:
+                    except IndexError:
                         logging.error(f"Error: list index out of range. The index {resolved_list_index[index - 1]} is out of the size of the list {val} whose length is {len(val)}")
                         break
             

@@ -1,7 +1,6 @@
 # See LICENSE.incore for details
 
 """Common Utils """
-import sys
 import os
 import subprocess
 import shlex
@@ -9,8 +8,6 @@ import riscv_isac
 from riscv_isac.log import logger
 import ruamel
 from ruamel.yaml import YAML
-from ruamel.yaml.representer import RoundTripRepresenter,SafeRepresenter
-import yaml as pyyaml
 from elftools.elf.elffile import ELFFile
 
 yaml = YAML(typ="rt")
@@ -255,7 +252,7 @@ class Command():
         """
         kwargs.setdefault('shell', self._is_shell_command())
         cwd = self._path2str(kwargs.get(
-            'cwd')) if not kwargs.get('cwd') is None else self._path2str(
+            'cwd')) if kwargs.get('cwd') is not None else self._path2str(
                 os.getcwd())
         kwargs.update({'cwd': cwd})
         logger.debug(cwd)
