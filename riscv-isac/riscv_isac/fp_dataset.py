@@ -4,7 +4,7 @@ import struct
 import random
 import sys
 import math
-from decimal import *
+from decimal import Decimal, getcontext
 
 # Prasanna
 hzero       = ['0x0000', '0x8000']
@@ -108,17 +108,17 @@ def num_explain(flen,num):
 
     if flen == 16:
         e_sz = 5	# exponent size
-        m_sz = 10	# mantissa size
+        _m_sz = 10	# mantissa size
     elif flen == 32:
         e_sz = 8
-        m_sz = 23
+        _m_sz = 23
     else:
         e_sz = 11
-        m_sz = 52
+        _m_sz = 52
     bin_val = bin(int('1'+num[2:],16))[3:]
-    sgn = bin_val[0]
+    _sgn = bin_val[0]
     exp = bin_val[1:e_sz+1]
-    man = bin_val[e_sz+1:]
+    _man = bin_val[e_sz+1:]
 
     if(int(exp,2)!=0):
         return('hnorm' if flen == 16 else 'fnorm' if flen==32 else 'dnorm')
@@ -129,13 +129,13 @@ def num_explain(flen,num):
 def extract_fields(flen, hexstr, postfix):
     if flen == 16:
         e_sz = 5	# exponent size
-        m_sz = 10	# mantissa size
+        _m_sz = 10	# mantissa size
     elif flen == 32:
         e_sz = 8
-        m_sz = 23
+        _m_sz = 23
     else:
         e_sz = 11
-        m_sz = 52
+        _m_sz = 52
     bin_val = bin(int('1'+hexstr[2:],16))[3:]
     sgn = bin_val[0]
     exp = bin_val[1:e_sz+1]
@@ -158,13 +158,13 @@ def extract_fields(flen, hexstr, postfix):
 def fields_dec_converter(flen, hexstr):                            # IEEE-754 Hex -> Decimal Converter
     if flen == 16:
         e_sz = 5	# exponent size
-        m_sz = 10
+        _m_sz = 10
     elif flen == 32:
         e_sz = 8
-        m_sz = 23
+        _m_sz = 23
     elif flen == 64:
         e_sz = 11
-        m_sz = 52
+        _m_sz = 52
     bin_val = bin(int('1'+hexstr[2:],16))[3:]
     sgn = bin_val[0]
     exp = bin_val[1:e_sz+1]
@@ -476,17 +476,17 @@ def ibm_b2(flen, iflen, opcode, ops, inxFlg=False, int_val = 100, seed = -1):
     sanitise = get_sanitise_func(opcode)
     if iflen == 16:
         flip_types = hzero + hone + hminsubnorm + hmaxsubnorm + hminnorm + hmaxnorm
-        b = '0x0010'
+        _b = '0x0010'
         e_sz= 5
         m_sz = 10
     elif iflen == 32:
         flip_types = fzero + fone + fminsubnorm + fmaxsubnorm + fminnorm + fmaxnorm
-        b = '0x00000010'
+        _b = '0x00000010'
         e_sz=8
         m_sz = 23
     elif iflen == 64:
         flip_types = dzero + done + dminsubnorm + dmaxsubnorm + dminnorm + dmaxnorm
-        b = '0x0000000000000010'
+        _b = '0x0000000000000010'
         e_sz=11
         m_sz = 52
 
@@ -530,10 +530,10 @@ def ibm_b2(flen, iflen, opcode, ops, inxFlg=False, int_val = 100, seed = -1):
 
     for i in range(len(result)):
         bin_val = bin(int('1'+result[i][0][2:],16))[3:]
-        rsgn = bin_val[0]
+        _rsgn = bin_val[0]
         rexp = bin_val[1:e_sz+1]
-        rman = bin_val[e_sz+1:]
-        rs1_exp = rs3_exp = rexp
+        _rman = bin_val[e_sz+1:]
+        _rs1_exp = _rs3_exp = rexp
         rs1_bin = bin(random.randrange(1,int_val))
         rs3_bin = bin(random.randrange(1,int_val))
         rs1_bin = ('0b0'+rexp+('0'*(m_sz-(len(rs1_bin)-2)))+rs1_bin[2:])
@@ -685,8 +685,10 @@ def ibm_b3(flen,iflen, opcode, ops, inxFlg=False, seed=-1):
         for k in range(len(ieee754_num)):
             for i in range(2,16,2):
                 grs = '{:04b}'.format(i)
-                if ieee754_num[k][0] == '-': sign = '1'
-                else: sign = '0'
+                if ieee754_num[k][0] == '-':
+                    sign = '1'
+                else:
+                    sign = '0'
                 ir_dataset.append([ieee754_num[k].split('p')[0]+str(i)+'p'+ieee754_num[k].split('p')[1],' | Guard = '+grs[0]+' Sticky = '+grs[2]+' Sign = '+sign+' LSB = '+lsb[k]])
         for i in range(len(ir_dataset)):
             ir_dataset[i][0] = float.fromhex(ir_dataset[i][0])
@@ -714,15 +716,17 @@ def ibm_b3(flen,iflen, opcode, ops, inxFlg=False, seed=-1):
         for k in range(len(ieee754_num)):
             for i in range(2,16,2):
                 grs = '{:04b}'.format(i)
-                if ieee754_num[k][0] == '-': sign = '1'
-                else: sign = '0'
+                if ieee754_num[k][0] == '-':
+                    sign = '1'
+                else:
+                    sign = '0'
                 ir_dataset.append([ieee754_num[k].split('p')[0]+str(i)+'p'+ieee754_num[k].split('p')[1],' | Guard = '+grs[0]+' Sticky = '+grs[2]+' Sign = '+sign+' LSB = '+lsb[k]])
 
         for i in range(len(ir_dataset)):
             ir_dataset[i][0] = float.fromhex(ir_dataset[i][0])
 
     elif iflen == 64:
-        maxdec = '1.7976931348623157e+308'
+        _maxdec = '1.7976931348623157e+308'
         maxnum = float.fromhex('0x1.fffffffffffffp+1023')
         ieee754_num = []
         lsb = []
@@ -745,8 +749,10 @@ def ibm_b3(flen,iflen, opcode, ops, inxFlg=False, seed=-1):
         for k in range(len(ieee754_num)):
             for i in range(2,16,2):
                 grs = '{:04b}'.format(i)
-                if ieee754_num[k][0] == '-': sign = '1'
-                else: sign = '0'
+                if ieee754_num[k][0] == '-':
+                    sign = '1'
+                else:
+                    sign = '0'
                 ir_dataset.append([str(Decimal(ieee754_num[k].split('e')[0])+Decimal(pow(i*16,-14)))+'e'+ieee754_num[k].split('e')[1],' | Guard = '+grs[0]+' Sticky = '+grs[2]+' Sign = '+sign+' LSB = '+lsb[k]])
 
     b3_comb = []
@@ -803,17 +809,17 @@ def ibm_b3(flen,iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
-            x3 = struct.unpack('f', struct.pack('f', rs3))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x3 = struct.unpack('f', struct.pack('f', rs3))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
-            x3 = rs3
+            _x1 = rs1
+            _x2 = rs2
+            _x3 = rs3
 
         if opcode in ['fadd','fsub','fmul','fdiv']:
             b3_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -1009,17 +1015,17 @@ def ibm_b4(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
-            x3 = struct.unpack('f', struct.pack('f', rs3))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x3 = struct.unpack('f', struct.pack('f', rs3))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
-            x3 = rs3
+            _x1 = rs1
+            _x2 = rs2
+            _x3 = rs3
 
         if opcode in ['fadd','fsub','fmul','fdiv']:
             b4_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -1141,7 +1147,7 @@ def ibm_b5(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             ir_dataset.append([-1*ir_dataset[i][0],ir_dataset[i][1]])
 
     elif iflen == 64:
-        maxdec = '1.7976931348623157e+308'
+        _maxdec = '1.7976931348623157e+308'
         maxnum = float.fromhex('0x1.fffffffffffffp+1023')
         minsubdec = '5e-324'
         ir_dataset = []
@@ -1240,17 +1246,17 @@ def ibm_b5(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
-            x3 = struct.unpack('f', struct.pack('f', rs3))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x3 = struct.unpack('f', struct.pack('f', rs3))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
-            x3 = rs3
+            _x1 = rs1
+            _x2 = rs2
+            _x3 = rs3
 
         if opcode in ['fadd','fsub','fmul','fdiv']:
             b5_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -1443,17 +1449,17 @@ def ibm_b6(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
-            x3 = struct.unpack('f', struct.pack('f', rs3))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x3 = struct.unpack('f', struct.pack('f', rs3))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
-            x3 = rs3
+            _x1 = rs1
+            _x2 = rs2
+            _x3 = rs3
 
         if opcode in ['fmul','fdiv']:
             b6_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -1528,13 +1534,13 @@ def ibm_b7(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
 
     Implementation:
             - The Sticky bit is calculated in each case. The guard bit here is always assumed to be zero and the sign is positive, so that miscalculation of the sticky bit will alter the final result.
-            - In the intermediate result dataset, the elements are appended as elements before the character ‘p’ and then the binary equivalent of ‘010’ + pow(2,i).
+            - In the intermediate result dataset, the elements are appended as elements before the character 'p' and then the binary equivalent of '010' + pow(2,i).
             - Finally on the extra bits, it is masked with the comment created in the previous point. All the first character of each element is converted to its floating point equivalent in a loop
             - The operand values are then passed into the extract_fields function to get individual fields in a floating point number (sign, exponent and mantissa).
             - Coverpoints are then appended with all rounding modes for that particular opcode.
 
     '''
-   
+
     sanitise = get_sanitise_func(opcode)
     opcode = opcode.split('.')[0]
     getcontext().prec = 60
@@ -1572,7 +1578,7 @@ def ibm_b7(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             ir_dataset[i][0] = float.fromhex(ir_dataset[i][0])
 
     elif iflen == 64:
-        maxdec = '1.7976931348623157e+308'
+        _maxdec = '1.7976931348623157e+308'
         maxnum = float.fromhex('0x1.fffffffffffffp+1023')
         ieee754_num = []
         for i in dsubnorm+dnorm:
@@ -1581,11 +1587,11 @@ def ibm_b7(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 ieee754_num.append(str(float_val))
 
         ir_dataset = []
-        for l in range(len(ieee754_num)):
+        for num_i in range(len(ieee754_num)):
             for k in range(1,13):
                 for i in range(4):
                     comment = (k*(i+1))*'0' + '1' + (51-(k*(i+1)))*'0'
-                    ir_dataset.append([str(Decimal(ieee754_num[l].split('e')[0])+Decimal(pow(16,-14))+Decimal(pow(pow(2,3-i)*16,-14-k)))+'e'+ieee754_num[l].split('e')[1],' | Mask on extra bits ---> ' + comment])
+                    ir_dataset.append([str(Decimal(ieee754_num[num_i].split('e')[0])+Decimal(pow(16,-14))+Decimal(pow(pow(2,3-i)*16,-14-k)))+'e'+ieee754_num[num_i].split('e')[1],' | Mask on extra bits ---> ' + comment])
 
     if seed == -1:
         if opcode in 'fadd':
@@ -1663,17 +1669,17 @@ def ibm_b7(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
-            x3 = struct.unpack('f', struct.pack('f', rs3))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x3 = struct.unpack('f', struct.pack('f', rs3))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
-            x3 = rs3
+            _x1 = rs1
+            _x2 = rs2
+            _x3 = rs3
 
         if opcode in ['fadd','fsub','fmul','fdiv']:
             b7_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -1741,8 +1747,8 @@ def ibm_b8(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
 
     Implementation:
             - The intermediate results dataset is populated in accordance with the abstract dataset defined above. The coverpoints can be increased by increasing the dataset of normal and subnormal numbers.
-            - Intermediate results can be out of the range of what is representable in the specified format; they should only be viewed numerically. Inorder to represent numbers that went out of range of the maximum representable number in python, the “Decimal” module was utilized.
-            - These operand values are treated as decimal numbers until their derivation after which they are converted into their respective IEEE754 hexadecimal floating point formats using the “floatingPoint_tohex” function.
+            - Intermediate results can be out of the range of what is representable in the specified format; they should only be viewed numerically. Inorder to represent numbers that went out of range of the maximum representable number in python, the "Decimal" module was utilized.
+            - These operand values are treated as decimal numbers until their derivation after which they are converted into their respective IEEE754 hexadecimal floating point formats using the "floatingPoint_tohex" function.
             - The operand values are then passed into the extract_fields function to get individual fields in a floating point number (sign, exponent and mantissa).
             - Coverpoints are then appended with all rounding modes for that particular opcode.
 
@@ -1752,7 +1758,7 @@ def ibm_b8(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
     getcontext().prec = 60
     if iflen == 16:
         ieee754_maxnorm = float.hex(fields_dec_converter(16, hmaxnorm[0]))
-        maxnum = float.fromhex(ieee754_maxnorm)
+        _maxnum = float.fromhex(ieee754_maxnorm)
         ieee754_num = []
         for i in hsubnorm+hnorm:
             float_val = float.hex(fields_dec_converter(16,i))
@@ -1773,7 +1779,7 @@ def ibm_b8(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             ir_dataset[i][0] = float.fromhex(ir_dataset[i][0])
     elif iflen == 32:
         ieee754_maxnorm = '0x1.7fffffp+127'
-        maxnum = float.fromhex(ieee754_maxnorm)
+        _maxnum = float.fromhex(ieee754_maxnorm)
         ieee754_num = []
         for i in fsubnorm+fnorm:
             float_val = float.hex(fields_dec_converter(32,i))
@@ -1792,8 +1798,8 @@ def ibm_b8(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             ir_dataset[i][0] = float.fromhex(ir_dataset[i][0])
 
     elif iflen == 64:
-        maxdec = '1.7976931348623157e+308'
-        maxnum = float.fromhex('0x1.fffffffffffffp+1023')
+        _maxdec = '1.7976931348623157e+308'
+        _maxnum = float.fromhex('0x1.fffffffffffffp+1023')
         ieee754_num = []
         for i in dsubnorm+dnorm:
             float_val = float.hex(fields_dec_converter(64,i))
@@ -1886,17 +1892,17 @@ def ibm_b8(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
-            x3 = struct.unpack('f', struct.pack('f', rs3))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x3 = struct.unpack('f', struct.pack('f', rs3))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
-            x3 = rs3
+            _x1 = rs1
+            _x2 = rs2
+            _x3 = rs3
 
         if opcode in ['fadd','fsub','fmul','fdiv']:
             b8_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -2180,7 +2186,7 @@ def ibm_b10(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
             - The exponent values of operand 1 and operand 2 obey the shift defined above. The mantissa value is randomly chosen and appended with the exponent derived.
             - Simultaneously, we convert these numbers into their corresponding IEEE754 floating point formats.
             - These operand values are then passed into the extract_fields function to get individual fields in a floating point number (sign, exponent and mantissa).
-            - Coverpoints are then appended with rounding mode ‘0’ for that particular opcode.
+            - Coverpoints are then appended with rounding mode '0' for that particular opcode.
 
     '''
     sanitise = get_sanitise_func(opcode)
@@ -2195,7 +2201,7 @@ def ibm_b10(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
         maxnum = float.fromhex(ieee754_maxnorm)
         exp_max = 255
     elif iflen == 64:
-        maxdec = '1.7976931348623157e+308'
+        _maxdec = '1.7976931348623157e+308'
         maxnum = float.fromhex('0x1.fffffffffffffp+1023')
         exp_max = 1023
 
@@ -2301,15 +2307,15 @@ def ibm_b11(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
     if iflen == 16:
         flip_types = hzero + hone + hminsubnorm + hmaxsubnorm + hminnorm + hmaxnorm
         e_sz=5
-        exp_max = 255
+        _exp_max = 255
     elif iflen == 32:
         flip_types = fzero + fone + fminsubnorm + fmaxsubnorm + fminnorm + fmaxnorm
         e_sz=8
-        exp_max = 255
+        _exp_max = 255
     elif iflen == 64:
         flip_types = dzero + done + dminsubnorm + dmaxsubnorm + dminnorm + dmaxnorm
         e_sz=11
-        exp_max = 1023
+        _exp_max = 1023
 
     if seed == -1:
         if opcode in 'fadd':
@@ -2331,13 +2337,18 @@ def ibm_b11(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
             rs1_exp = bin_val[1:e_sz+1]
             rs1_man = bin_val[e_sz+1:]
 
-            if int(rs1_exp,2) < 4: rs2_exp = -127
-            else : rs2_exp = random.randrange(-127,int(rs1_exp,2)-131)
+            if int(rs1_exp,2) < 4:
+                rs2_exp = -127
+            else:
+                rs2_exp = random.randrange(-127,int(rs1_exp,2)-131)
             comment_str = ' | Exponent = '+ str(rs2_exp) + ' --> A value smaller than (p - 4)'
             rs2_exp += 127
-            if iflen == 16:  rs2_exp = '{:05b}'.format(rs2_exp)
-            elif iflen == 32: rs2_exp = '{:08b}'.format(rs2_exp)
-            elif iflen == 64: rs2_exp = '{:011b}'.format(rs2_exp)
+            if iflen == 16:
+                rs2_exp = '{:05b}'.format(rs2_exp)
+            elif iflen == 32:
+                rs2_exp = '{:08b}'.format(rs2_exp)
+            elif iflen == 64:
+                rs2_exp = '{:011b}'.format(rs2_exp)
             for j in range(len(rs1_man)):
                 rs2_sgn = rs1_sgn
                 rs2_man = '0'*j + rs1_man[j:]                        # Leading 0s
@@ -2399,13 +2410,18 @@ def ibm_b11(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
                 b11_comb.append((floatingPoint_tohex(iflen,rs2),rs1[i]))
                 comment.append(comment_str + ' | Checkerboard pattern ---> rs1_man = '+rs2_man)
 
-            if int(rs1_exp,2) >= 250: rs2_exp = 127
-            else : rs2_exp = random.randrange(int(rs1_exp,2)-123,127)
+            if int(rs1_exp,2) >= 250:
+                rs2_exp = 127
+            else:
+                rs2_exp = random.randrange(int(rs1_exp,2)-123,127)
             comment_str = ' | Exponent = '+ str(rs2_exp) + ' --> A value greater than (p + 4)'
             rs2_exp += 127
-            if iflen == 16:  rs2_exp = '{:05b}'.format(rs2_exp)
-            elif iflen == 32: rs2_exp = '{:08b}'.format(rs2_exp)
-            elif iflen == 64: rs2_exp = '{:011b}'.format(rs2_exp)
+            if iflen == 16:
+                rs2_exp = '{:05b}'.format(rs2_exp)
+            elif iflen == 32:
+                rs2_exp = '{:08b}'.format(rs2_exp)
+            elif iflen == 64:
+                rs2_exp = '{:011b}'.format(rs2_exp)
             for j in range(len(rs1_man)):
                 rs2_sgn = rs1_sgn
                 rs2_man = '0'*j + rs1_man[j:]                        # Leading 0s
@@ -2469,15 +2485,20 @@ def ibm_b11(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
 
             ul = int(rs1_exp,2)-123
             ll = int(rs1_exp,2)-131
-            if int(rs1_exp,2) >= 250: ul = 127
-            if int(rs1_exp,2) < 4: ll = -127
+            if int(rs1_exp,2) >= 250:
+                ul = 127
+            if int(rs1_exp,2) < 4:
+                ll = -127
             for expval in range (ll, ul):
                 rs2_exp = expval
                 comment_str = ' | Exponent = '+ str(rs2_exp) + ' --> Values in the range (p - 4) to (p + 4)'
                 rs2_exp += 127
-                if iflen == 16:  rs2_exp = '{:05b}'.format(rs2_exp)
-                elif iflen == 32: rs2_exp = '{:08b}'.format(rs2_exp)
-                elif iflen == 64: rs2_exp = '{:011b}'.format(rs2_exp)
+                if iflen == 16:
+                    rs2_exp = '{:05b}'.format(rs2_exp)
+                elif iflen == 32:
+                    rs2_exp = '{:08b}'.format(rs2_exp)
+                elif iflen == 64:
+                    rs2_exp = '{:011b}'.format(rs2_exp)
                 for j in range(len(rs1_man)):
                     rs2_sgn = rs1_sgn
                     rs2_man = '0'*j + rs1_man[j:]                        # Leading 0s
@@ -2611,14 +2632,14 @@ def ibm_b12(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         ieee754_minsubnorm = float.hex(fields_dec_converter(16, hminsubnorm[0]))
         minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = float.hex(fields_dec_converter(16, hmaxsubnorm[0]))
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
     elif iflen == 32:
         ieee754_maxnorm = '0x1.7fffffp+127'
         maxnum = float.fromhex(ieee754_maxnorm)
         ieee754_minsubnorm = '0x0.000001p-126'
         minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = '0x0.7fffffp-126'
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
 
     elif iflen == 64:
         ieee754_maxnorm = '0x1.fffffffffffffp+1023'
@@ -2626,7 +2647,7 @@ def ibm_b12(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         ieee754_minsubnorm = '0x0.0000000000001p-1022'
         minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = '0x0.fffffffffffffp-1022'
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
 
     if seed == -1:
         if opcode in 'fadd':
@@ -2639,8 +2660,10 @@ def ibm_b12(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
     b12_comb = []
 
     for i in range(50):
-        if opcode in 'fadd': rs1 = -1*random.uniform(minsubnorm,maxnum)
-        elif opcode in 'fsub': rs1 = random.uniform(minsubnorm,maxnum)
+        if opcode in 'fadd':
+            rs1 = -1*random.uniform(minsubnorm,maxnum)
+        elif opcode in 'fsub':
+            rs1 = random.uniform(minsubnorm,maxnum)
         ir = random.uniform(1,maxnum)
         if opcode in 'fadd':
             if iflen == 16 or iflen == 32:
@@ -2656,14 +2679,14 @@ def ibm_b12(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _ = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
+            _x1 = rs1
+            _x2 = rs2
 
         if opcode in ['fadd','fsub']:
             b12_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -2780,14 +2803,14 @@ def ibm_b13(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
+            _x1 = rs1
+            _x2 = rs2
 
         if opcode in ['fadd','fsub']:
             b13_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -2879,7 +2902,7 @@ def ibm_b14(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
         limnum = maxnum
 
     elif iflen == 64:
-        maxdec = '1.7976931348623157e+308'
+        _maxdec = '1.7976931348623157e+308'
         maxnum = float.fromhex('0x1.fffffffffffffp+1023')
         exp_max = 1022
         ieee754_limnum = '0x1.fffffffffffffp+507'
@@ -2918,10 +2941,14 @@ def ibm_b14(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
             b14_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2)),floatingPoint_tohex(iflen,float(rs3_num))))
             comment.append(' | Multiplicand Exponent = '+str(mul_exp)+', Addend exponent = '+ str(int(float.hex(float(str(rs3).split('e')[0])).split('p')[1])+rs3_exp) + ' --> Difference smaller than -(2*p + 1)')
 
-        if mul_exp-((2*mant_bits)+1) < -1*exp_max: exp1 = -1*exp_max
-        else: exp1 = mul_exp-((2*mant_bits)+1)
-        if mul_exp+mant_bits+1 > exp_max: exp2 = exp_max
-        else: exp2 = mul_exp+mant_bits+1
+        if mul_exp-((2*mant_bits)+1) < -1*exp_max:
+            exp1 = -1*exp_max
+        else:
+            exp1 = mul_exp-((2*mant_bits)+1)
+        if mul_exp+mant_bits+1 > exp_max:
+            exp2 = exp_max
+        else:
+            exp2 = mul_exp+mant_bits+1
         for j in range(exp1, exp2):
             rs3_num = float.hex(float(str(rs3).split('e')[0])).split('p')[0]+'p'+str(int(float.hex(float(str(rs3).split('e')[0])).split('p')[1])+j)
             rs3_num = float.fromhex(rs3_num)
@@ -2992,10 +3019,10 @@ def ibm_b15(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
 
     Implementation:
             - Here the condition is imposed that if the value of the ops variable is 3, then each of the elements in the flip types is iterated and split into their respective sign, mantissa and exponent part.
-            - A mul variable is initialized and parsed to the field_dec_converter for each rs1 value in the list. Next the loop is run for the mantissa parts generated for rs1 values, where it is checked for certain patterns like the leading 0’s, leading 1’s, trailing 0’s and trailing 1’s.
+            - A mul variable is initialized and parsed to the field_dec_converter for each rs1 value in the list. Next the loop is run for the mantissa parts generated for rs1 values, where it is checked for certain patterns like the leading 0's, leading 1's, trailing 0's and trailing 1's.
             - The checkerboard list is declared with the probable sequences for rs2. Here the sign and exponent are extracted from the rs1 values. Mantissa part is derived from the checkerboard list. Consecutively, if the iflen value differs, then the range available varies.
             - The operand values are then passed into the extract_fields function to get individual fields in a floating point number (sign, exponent and mantissa).
-            - Coverpoints are then appended with rounding mode “0” for that particular opcode.
+            - Coverpoints are then appended with rounding mode "0" for that particular opcode.
 
     '''
     sanitise = get_sanitise_func(opcode)
@@ -3004,29 +3031,29 @@ def ibm_b15(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
     if iflen == 16:
         flip_types = hzero + hone + hminsubnorm + hmaxsubnorm + hminnorm + hmaxnorm
         e_sz = 5
-        exp_max = 15
+        _exp_max = 15
         ieee754_maxnorm = float.hex(fields_dec_converter(16, hmaxnorm[0]))
         maxnum = float.fromhex(ieee754_maxnorm)
-        mant_bits = 10
+        _mant_bits = 10
         limnum = maxnum
     elif iflen == 32:
         flip_types = fzero + fone + fminsubnorm + fmaxsubnorm + fminnorm + fmaxnorm
         e_sz=8
-        exp_max = 255
+        _exp_max = 255
         ieee754_maxnorm = '0x1.7fffffp+127'
         maxnum = float.fromhex(ieee754_maxnorm)
-        exp_max = 127
-        mant_bits = 23
+        _exp_max = 127
+        _mant_bits = 23
         limnum = maxnum
     elif iflen == 64:
         flip_types = dzero + done + dminsubnorm + dmaxsubnorm + dminnorm + dmaxnorm
         e_sz=11
-        exp_max = 1023
-        maxdec = '1.7976931348623157e+308'
+        _exp_max = 1023
+        _maxdec = '1.7976931348623157e+308'
         maxnum = float.fromhex('0x1.fffffffffffffp+1023')
-        exp_max = 1022
+        _exp_max = 1022
         ieee754_limnum = '0x1.fffffffffffffp+507'
-        mant_bits = 52
+        _mant_bits = 52
         limnum = float.fromhex(ieee754_limnum)
 
     if seed == -1:
@@ -3054,18 +3081,24 @@ def ibm_b15(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
             rs1_man = bin_val[e_sz+1:]
 
             if iflen == 16:
-                if int(rs1_exp,2) < 33: rs2_exp = 0
-                else : rs2_exp = random.randrange(0,int(rs1_exp,2)-33)
+                if int(rs1_exp,2) < 33:
+                    rs2_exp = 0
+                else:
+                    rs2_exp = random.randrange(0,int(rs1_exp,2)-33)
                 comment_str = ' | Exponent = '+ str(rs2_exp-15) + ' --> Difference smaller than -(2p + 1)'
                 rs2_exp = '{:05b}'.format(rs2_exp)  
             elif iflen == 32:
-                if int(rs1_exp,2) < 65: rs2_exp = 0
-                else : rs2_exp = random.randrange(0,int(rs1_exp,2)-65)
+                if int(rs1_exp,2) < 65:
+                    rs2_exp = 0
+                else:
+                    rs2_exp = random.randrange(0,int(rs1_exp,2)-65)
                 comment_str = ' | Exponent = '+ str(rs2_exp-127) + ' --> Difference smaller than -(2p + 1)'
                 rs2_exp = '{:08b}'.format(rs2_exp)
             elif iflen == 64:
-                if int(rs1_exp,2) < 129: rs2_exp = 0
-                else : rs2_exp = random.randrange(0,int(rs1_exp,2)-129)
+                if int(rs1_exp,2) < 129:
+                    rs2_exp = 0
+                else:
+                    rs2_exp = random.randrange(0,int(rs1_exp,2)-129)
                 comment_str = ' | Exponent = '+ str(rs2_exp-1023) + ' --> Difference smaller than -(2p + 1)'
                 rs2_exp = '{:011b}'.format(rs2_exp)
             mul = fields_dec_converter(iflen,rs1[i])
@@ -3118,20 +3151,25 @@ def ibm_b15(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
                 b15_comb.append((floatingPoint_tohex(iflen,float(rs1_act)),floatingPoint_tohex(iflen,float(rs2_act)),floatingPoint_tohex(iflen,float(rs2))))
                 comment.append(comment_str + ' | Checkerboard pattern ---> rs3_man = '+rs2_man)
 
-            
             if iflen == 16:
-                if int(rs1_exp,2) > 46: rs2_exp = 63
-                else : rs2_exp = random.randrange(int(rs1_exp,2)+17, 63)
+                if int(rs1_exp,2) > 46:
+                    rs2_exp = 63
+                else:
+                    rs2_exp = random.randrange(int(rs1_exp,2)+17, 63)
                 comment_str = ' | Exponent = '+ str(rs2_exp-15) + ' --> Difference greater than (p + 1)'
                 rs2_exp = '{:05b}'.format(rs2_exp)
             elif iflen == 32:
-                if int(rs1_exp,2) > 222: rs2_exp = 255
-                else : rs2_exp = random.randrange(int(rs1_exp,2)+33, 255)
+                if int(rs1_exp,2) > 222:
+                    rs2_exp = 255
+                else:
+                    rs2_exp = random.randrange(int(rs1_exp,2)+33, 255)
                 comment_str = ' | Exponent = '+ str(rs2_exp-127) + ' --> Difference greater than (p + 1)'
                 rs2_exp = '{:08b}'.format(rs2_exp)
             elif iflen == 64:
-                if int(rs1_exp,2) > 958: rs2_exp = 1023
-                else : rs2_exp = random.randrange(int(rs1_exp,2)+65, 1023)
+                if int(rs1_exp,2) > 958:
+                    rs2_exp = 1023
+                else:
+                    rs2_exp = random.randrange(int(rs1_exp,2)+65, 1023)
                 comment_str = ' | Exponent = '+ str(rs2_exp-1023) + ' --> Difference greater than (p + 1)'
                 rs2_exp = '{:011b}'.format(rs2_exp)
             mul = fields_dec_converter(iflen,rs1[i])
@@ -3187,21 +3225,27 @@ def ibm_b15(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
             if iflen == 16:
                 ul = int(rs1_exp,2)+17
                 ll = int(rs1_exp,2)-33
-                if int(rs1_exp,2) >= 46: ul = 63
-                if int(rs1_exp,2) < 33: ll = 0
+                if int(rs1_exp,2) >= 46:
+                    ul = 63
+                if int(rs1_exp,2) < 33:
+                    ll = 0
             elif iflen == 32:
                 ul = int(rs1_exp,2)+33
                 ll = int(rs1_exp,2)-65
-                if int(rs1_exp,2) >= 222: ul = 255
-                if int(rs1_exp,2) < 65: ll = 0
+                if int(rs1_exp,2) >= 222:
+                    ul = 255
+                if int(rs1_exp,2) < 65:
+                    ll = 0
             elif iflen == 64:
                 ul = int(rs1_exp,2)+65
                 ll = int(rs1_exp,2)-129
-                if int(rs1_exp,2) >= 958: ul = 1023
-                if int(rs1_exp,2) < 129: ll = 0
+                if int(rs1_exp,2) >= 958:
+                    ul = 1023
+                if int(rs1_exp,2) < 129:
+                    ll = 0
             for expval in range (ll, ul):
                 rs2_exp = expval
-                
+
                 if iflen == 16:
                     comment_str = ' | Exponent = '+ str(rs2_exp-15) + ' --> Difference between -(2p+1) and (p+1)'
                     rs2_exp = '{:05b}'.format(rs2_exp)
@@ -3335,7 +3379,7 @@ def ibm_b16(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         ieee754_minsubnorm = float.hex(fields_dec_converter(16, hminsubnorm[0]))
         minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = float.hex(fields_dec_converter(16, hmaxsubnorm[0]))
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
         limnum =  maxnum
     elif iflen == 32:
         ieee754_maxnorm = '0x1.7fffffp+127'
@@ -3343,7 +3387,7 @@ def ibm_b16(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         ieee754_minsubnorm = '0x0.000001p-126'
         minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = '0x0.7fffffp-126'
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
         limnum = maxnum
 
     elif iflen == 64:
@@ -3352,7 +3396,7 @@ def ibm_b16(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         ieee754_minsubnorm = '0x0.0000000000001p-1022'
         minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = '0x0.fffffffffffffp-1022'
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
         ieee754_limnum = '0x1.fffffffffffffp+507'
         limnum = float.fromhex(ieee754_limnum)
 
@@ -3399,17 +3443,17 @@ def ibm_b16(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
+            _x1 = rs1
+            _x2 = rs2
 
-        result = []
+        _result = []
         if opcode in ['fmadd','fmsub','fnmadd','fnmsub']:
             b17_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2)),floatingPoint_tohex(iflen,float(rs3))))
 
@@ -3521,7 +3565,8 @@ def ibm_b17(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         rs1 = random.uniform(minsubnorm,limnum)
         rs2 = random.uniform(minsubnorm,limnum)
         ir = random.uniform(minsubnorm,maxsubnorm)
-        if ir > rs1*rs2: ir = random.uniform(minsubnorm,rs1*rs2)
+        if ir > rs1*rs2:
+            ir = random.uniform(minsubnorm,rs1*rs2)
 
         if opcode in 'fmadd':
             if iflen == 32 or iflen == 16:
@@ -3547,17 +3592,17 @@ def ibm_b17(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
+            _x1 = rs1
+            _x2 = rs2
 
-        result = []
+        _result = []
         if opcode in ['fmadd','fmsub','fnmadd','fnmsub']:
             b17_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2)),floatingPoint_tohex(iflen,float(rs3))))
 
@@ -3661,8 +3706,10 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         for k in range(len(ieee754_num)):
             for i in range(2,16,2):
                 grs = '{:04b}'.format(i)
-                if ieee754_num[k][0] == '-': sign = '1'
-                else: sign = '0'
+                if ieee754_num[k][0] == '-':
+                    sign = '1'
+                else:
+                    sign = '0'
                 ir_dataset.append([ieee754_num[k].split('p')[0]+str(i)+'p'+ieee754_num[k].split('p')[1],' | Guard = '+grs[0]+' Sticky = '+grs[2]+' Sign = '+sign+' LSB = '+lsb[k]])
         for i in range(len(ir_dataset)):
             ir_dataset[i][0] = float.fromhex(ir_dataset[i][0])
@@ -3690,15 +3737,17 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         for k in range(len(ieee754_num)):
             for i in range(2,16,2):
                 grs = '{:04b}'.format(i)
-                if ieee754_num[k][0] == '-': sign = '1'
-                else: sign = '0'
+                if ieee754_num[k][0] == '-':
+                    sign = '1'
+                else:
+                    sign = '0'
                 ir_dataset.append([ieee754_num[k].split('p')[0]+str(i)+'p'+ieee754_num[k].split('p')[1],' | Guard = '+grs[0]+' Sticky = '+grs[2]+' Sign = '+sign+' LSB = '+lsb[k] + ': Multiply add - Guard & Sticky Cancellation'])
 
         for i in range(len(ir_dataset)):
             ir_dataset[i][0] = float.fromhex(ir_dataset[i][0])
 
     elif iflen == 64:
-        maxdec = '1.7976931348623157e+308'
+        _maxdec = '1.7976931348623157e+308'
         maxnum = float.fromhex('0x1.fffffffffffffp+1023')
         ieee754_num = []
         lsb = []
@@ -3721,8 +3770,10 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         for k in range(len(ieee754_num)):
             for i in range(2,16,2):
                 grs = '{:04b}'.format(i)
-                if ieee754_num[k][0] == '-': sign = '1'
-                else: sign = '0'
+                if ieee754_num[k][0] == '-':
+                    sign = '1'
+                else:
+                    sign = '0'
                 ir_dataset.append([str(Decimal(ieee754_num[k].split('e')[0])+Decimal(pow(i*16,-14)))+'e'+ieee754_num[k].split('e')[1],' | Guard = '+grs[0]+' Sticky = '+grs[2]+' Sign = '+sign+' LSB = '+lsb[k] + ': Multiply add - Guard & Sticky Cancellation'])
 
     b18_comb = []
@@ -3763,17 +3814,17 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
-            x3 = struct.unpack('f', struct.pack('f', rs3))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x3 = struct.unpack('f', struct.pack('f', rs3))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
-            x3 = rs3
+            _x1 = rs1
+            _x2 = rs2
+            _x3 = rs3
 
         if opcode in ['fmadd','fnmadd','fmsub','fnmsub']:
             b18_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2)),floatingPoint_tohex(iflen,float(rs3))))
@@ -3851,17 +3902,17 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
-            x3 = struct.unpack('f', struct.pack('f', rs3))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x3 = struct.unpack('f', struct.pack('f', rs3))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
-            x3 = rs3
+            _x1 = rs1
+            _x2 = rs2
+            _x3 = rs3
 
         if opcode in ['fmadd','fnmadd','fmsub','fnmsub']:
             b18_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2)),floatingPoint_tohex(iflen,float(rs3))))
@@ -3902,7 +3953,7 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             ir_dataset.append([-1*ir_dataset[i][0],ir_dataset[i][1]])
 
     elif iflen == 64:
-        maxdec = '1.7976931348623157e+308'
+        _maxdec = '1.7976931348623157e+308'
         maxnum = float.fromhex('0x1.fffffffffffffp+1023')
         minsubdec = '5e-324'
         ir_dataset = []
@@ -3955,17 +4006,17 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
-            x3 = m(rs3)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
+            _x3 = m(rs3)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
-            x3 = struct.unpack('f', struct.pack('f', rs3))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x3 = struct.unpack('f', struct.pack('f', rs3))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
-            x3 = rs3
+            _x1 = rs1
+            _x2 = rs2
+            _x3 = rs3
 
         if opcode in ['fmadd','fnmadd','fmsub','fnmsub']:
             b18_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2)),floatingPoint_tohex(iflen,float(rs3))))
@@ -4050,7 +4101,7 @@ def ibm_b19(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = float.hex(fields_dec_converter(16, hmaxsubnorm[0]))
         maxsubnorm = float.fromhex(ieee754_maxsubnorm)
-        limnum = maxnum
+        _limnum = maxnum
 
     elif iflen == 32:
         ieee754_maxnorm = '0x1.7fffffp+127'
@@ -4059,7 +4110,7 @@ def ibm_b19(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = '0x0.7fffffp-126'
         maxsubnorm = float.fromhex(ieee754_maxsubnorm)
-        limnum = maxnum
+        _limnum = maxnum
 
     elif iflen == 64:
         ieee754_maxnorm = '0x1.fffffffffffffp+1023'
@@ -4069,7 +4120,7 @@ def ibm_b19(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         ieee754_maxsubnorm = '0x0.fffffffffffffp-1022'
         maxsubnorm = float.fromhex(ieee754_maxsubnorm)
         ieee754_limnum = '0x1.fffffffffffffp+507'
-        limnum = float.fromhex(ieee754_limnum)
+        _limnum = float.fromhex(ieee754_limnum)
 
     if seed == -1:
         if opcode in 'fmin':
@@ -4115,10 +4166,14 @@ def ibm_b19(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             else:
                 j_sig = '0'
                 j_exp = '0'
-            if float(i_sig) >= float(j_sig): sig_sign = '>='
-            else: sig_sign = '<'
-            if float(i_exp) >= float(j_exp): exp_sign = '>='
-            else: exp_sign = '<'
+            if float(i_sig) >= float(j_sig):
+                sig_sign = '>='
+            else:
+                sig_sign = '<'
+            if float(i_exp) >= float(j_exp):
+                exp_sign = '>='
+            else:
+                exp_sign = '<'
             rs1 = float(i_sig+'e'+i_exp)
             rs2 = float(j_sig+'e'+j_exp)
             b19_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -4243,9 +4298,9 @@ def ibm_b20(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         ieee754_maxnorm = float.hex(fields_dec_converter(16, hmaxnorm[0]))
         maxnum = float.fromhex(ieee754_maxnorm)
         ieee754_minsubnorm = float.hex(fields_dec_converter(16, hminsubnorm[0]))
-        minsubnorm = float.fromhex(ieee754_minsubnorm)
+        _minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = float.hex(fields_dec_converter(16, hmaxsubnorm[0]))
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
         limnum = maxnum
         ir_dataset = []
         for i in range(1,8,1):
@@ -4287,9 +4342,9 @@ def ibm_b20(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         ieee754_maxnorm = '0x1.7fffffp+127'
         maxnum = float.fromhex(ieee754_maxnorm)
         ieee754_minsubnorm = '0x0.000001p-126'
-        minsubnorm = float.fromhex(ieee754_minsubnorm)
+        _minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = '0x0.7fffffp-126'
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
         limnum = maxnum
         ir_dataset = []
         for i in range(1,21,1):
@@ -4333,12 +4388,12 @@ def ibm_b20(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         ieee754_maxnorm = '0x1.fffffffffffffp+1023'
         maxnum = float.fromhex(ieee754_maxnorm)
         ieee754_minsubnorm = '0x0.0000000000001p-1022'
-        minsubnorm = float.fromhex(ieee754_minsubnorm)
+        _minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = '0x0.fffffffffffffp-1022'
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
         ieee754_limnum = '0x1.fffffffffffffp+507'
         limnum = float.fromhex(ieee754_limnum)
-        ieee754_num = []
+        _ieee754_num = []
         ir_dataset = []
         for i in range(1,50,1):
             for k in range(5):
@@ -4394,14 +4449,14 @@ def ibm_b20(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         if(iflen==16):
             def m(rsx):
                 return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
-            x1 = m(rs1)
-            x2 = m(rs2)
+            _x1 = m(rs1)
+            _x2 = m(rs2)
         elif(iflen==32):
-            x1 = struct.unpack('f', struct.pack('f', rs1))[0]
-            x2 = struct.unpack('f', struct.pack('f', rs2))[0]
+            _x1 = struct.unpack('f', struct.pack('f', rs1))[0]
+            _x2 = struct.unpack('f', struct.pack('f', rs2))[0]
         elif(iflen==64):
-            x1 = rs1
-            x2 = rs2
+            _x1 = rs1
+            _x2 = rs2
 
         if opcode in ['fdiv']:
             b8_comb.append((floatingPoint_tohex(iflen,float(rs1)),floatingPoint_tohex(iflen,float(rs2))))
@@ -4550,9 +4605,12 @@ def ibm_b22(flen, iflen, opcode, ops, inxFlg=False, seed=10):
     sanitise = get_sanitise_func(opcode)
 
     opcode = opcode.split('.')[0] + '.' + opcode.split('.')[1]
-    if opcode[2] == 'h': iflen = 16
-    elif opcode[2] == 's': iflen = 32
-    elif opcode[2] == 'd': iflen = 64
+    if opcode[2] == 'h':
+        iflen = 16
+    elif opcode[2] == 's':
+        iflen = 32
+    elif opcode[2] == 'd':
+        iflen = 64
     getcontext().prec = 40
     xlen = 0
 
@@ -4583,10 +4641,10 @@ def ibm_b22(flen, iflen, opcode, ops, inxFlg=False, seed=10):
         ieee754_maxnorm = float.hex(fields_dec_converter(16, hmaxnorm[0]))
         maxnum = float.fromhex(ieee754_maxnorm)
         ieee754_minsubnorm = float.hex(fields_dec_converter(16, hminsubnorm[0]))
-        minsubnorm = float.fromhex(ieee754_minsubnorm)
+        _minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = float.hex(fields_dec_converter(16, hmaxsubnorm[0]))
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
-        limnum = maxnum
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _limnum = maxnum
         op_dataset = []
         for i in range(12,xlen+18,1):
             bits = random.getrandbits(10)
@@ -4634,10 +4692,10 @@ def ibm_b22(flen, iflen, opcode, ops, inxFlg=False, seed=10):
         ieee754_maxnorm = '0x1.7fffffp+127'
         maxnum = float.fromhex(ieee754_maxnorm)
         ieee754_minsubnorm = '0x0.000001p-126'
-        minsubnorm = float.fromhex(ieee754_minsubnorm)
+        _minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = '0x0.7fffffp-126'
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
-        limnum = maxnum
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _limnum = maxnum
         op_dataset = []
         for i in range(124,xlen+130,1):
             bits = random.getrandbits(23)
@@ -4686,11 +4744,11 @@ def ibm_b22(flen, iflen, opcode, ops, inxFlg=False, seed=10):
         ieee754_maxnorm = '0x1.fffffffffffffp+1023'
         maxnum = float.fromhex(ieee754_maxnorm)
         ieee754_minsubnorm = '0x0.0000000000001p-1022'
-        minsubnorm = float.fromhex(ieee754_minsubnorm)
+        _minsubnorm = float.fromhex(ieee754_minsubnorm)
         ieee754_maxsubnorm = '0x0.fffffffffffffp-1022'
-        maxsubnorm = float.fromhex(ieee754_maxsubnorm)
+        _maxsubnorm = float.fromhex(ieee754_maxsubnorm)
         ieee754_limnum = '0x1.fffffffffffffp+507'
-        limnum = float.fromhex(ieee754_limnum)
+        _limnum = float.fromhex(ieee754_limnum)
         op_dataset = []
         for i in range(1020,xlen+1026,1):
             bits = random.getrandbits(52)
@@ -4807,8 +4865,8 @@ def ibm_b23(flen, iflen, opcode, ops, inxFlg=False):
 
     getcontext().prec = 40
 
-    operations = ['+','-']
-    nums = [0,100,200,800,1600]
+    _operations = ['+','-']
+    _nums = [0,100,200,800,1600]
     dataset = []
 
     if iflen == 16:
@@ -5000,8 +5058,8 @@ def ibm_b25(flen, iflen, opcode, ops, inxFlg=False, seed=10):
     random.seed(seed)
     getcontext().prec = 40
 
-    operations = ['+','-']
-    nums = [0,0.01,0.1,0.11]
+    _operations = ['+','-']
+    _nums = [0,0.01,0.1,0.11]
 
     dataset = [(0,"0"),(1,"1")] +( [(-1,"-1")] if not is_unsigned else [])
 
