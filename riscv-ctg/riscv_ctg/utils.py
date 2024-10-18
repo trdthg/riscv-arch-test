@@ -35,7 +35,8 @@ def gen_format_data():
     op_template = load_yaml(const.template_file)
 
     # Initialize nested dictionary
-    nested_dict = lambda: defaultdict(nested_dict)
+    def nested_dict():
+        return defaultdict(nested_dict)
     format_dict = nested_dict()
     
     for mnemonic, data in op_template.items():

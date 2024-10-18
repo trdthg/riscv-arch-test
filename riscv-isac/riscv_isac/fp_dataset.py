@@ -48,21 +48,19 @@ done        = ['0x3FF0000000000000', '0xBF80000000000000']
 
 rounding_modes = ['0','1','2','3','4']
 
-sanitise_cvpt = lambda rm,x,iflen,flen,c,inxFlg: x + ' fcsr == '+hex(rm<<5) + ' and rm_val == 7 ' \
-                + ('' if iflen == flen or inxFlg else ''.join([' and rs'+str(x)+'_nan_prefix == 0x' \
-                + 'f'*int((flen-iflen)/4) for x in range(1,c+1)]))
+def sanitise_cvpt(rm, x, iflen, flen, c, inxFlg):
+    return x + ' fcsr == ' + hex(rm << 5) + ' and rm_val == 7 ' + ('' if iflen == flen or inxFlg else ''.join([' and rs' + str(x) + '_nan_prefix == 0x' + 'f' * int((flen - iflen) / 4) for x in range(1, c + 1)]))
 
-sanitise_norm = lambda rm,x,iflen,flen,c,inxFlg: x + ' fcsr == 0'\
-                + ('' if iflen == flen or inxFlg else ''.join([' and rs'+str(x)+'_nan_prefix == 0x' \
-                + 'f'*int((flen-iflen)/4) for x in range(1,c+1)]))
+def sanitise_norm(rm, x, iflen, flen, c, inxFlg):
+    return x + ' fcsr == 0' + ('' if iflen == flen or inxFlg else ''.join([' and rs' + str(x) + '_nan_prefix == 0x' + 'f' * int((flen - iflen) / 4) for x in range(1, c + 1)]))
 
-sanitise_norm_nopref = lambda rm,x,iflen,flen,c,inxFlg: x + ' fcsr == 0'
-sanitise_nopref = lambda rm,x,iflen,flen,c,inxFlg: x + ' fcsr == 0 and rm_val == 7'
+def sanitise_norm_nopref(rm, x, iflen, flen, c, inxFlg):
+    return x + ' fcsr == 0'
+def sanitise_nopref(rm, x, iflen, flen, c, inxFlg):
+    return x + ' fcsr == 0 and rm_val == 7'
 
-get_sanitise_func = lambda opcode: sanitise_norm if any([x in opcode for x in \
-        ['fsgnj','fle','flt','feq','fclass','flw','fsw','fld','fsd','fmin','fmax']]) else \
-        (sanitise_norm_nopref if 'fmv' in opcode else ( sanitise_nopref if any([opcode.endswith(x) \
-        for x in ['.l','.w','.lu','.wu']]) else sanitise_cvpt))
+def get_sanitise_func(opcode):
+    return sanitise_norm if any([x in opcode for x in ['fsgnj', 'fle', 'flt', 'feq', 'fclass', 'flw', 'fsw', 'fld', 'fsd', 'fmin', 'fmax']]) else sanitise_norm_nopref if 'fmv' in opcode else sanitise_nopref if any([opcode.endswith(x) for x in ['.l', '.w', '.lu', '.wu']]) else sanitise_cvpt
 
 def num_explain(flen,num):
     num_dict = {
@@ -587,7 +585,7 @@ def ibm_b2(flen, iflen, opcode, ops, inxFlg=False, int_val = 100, seed = -1):
             cvpt += (extract_fields(iflen,c[x-1],str(x)))
             cvpt += " and "
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -803,9 +801,8 @@ def ibm_b3(flen,iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs2 = -1*(Decimal(rs3) + Decimal(ir_dataset[i][0]))/Decimal(rs1)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -836,7 +833,7 @@ def ibm_b3(flen,iflen, opcode, ops, inxFlg=False, seed=-1):
                 cvpt += " and "
             # cvpt += 'rm_val == '+str(rm)
             cvpt =  sanitise(rm,cvpt,iflen,flen,ops,inxFlg)
-            if inxFlg == True:
+            if inxFlg is True:
                 cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
             else:
                 cvpt += ' # '            
@@ -1010,9 +1007,8 @@ def ibm_b4(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs2 = -1*(Decimal(rs3) + Decimal(ir_dataset[i][0]))/Decimal(rs1)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -1043,7 +1039,7 @@ def ibm_b4(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 cvpt += " and "
             # cvpt += 'rm_val == '+str(rm)
             cvpt = sanitise(rm,cvpt,iflen,flen,ops,inxFlg)
-            if inxFlg == True:
+            if inxFlg is True:
                 cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
             else:
                 cvpt += ' # '
@@ -1242,9 +1238,8 @@ def ibm_b5(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs2 = -1*(Decimal(rs3) + Decimal(ir_dataset[i][0]))/Decimal(rs1)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -1275,7 +1270,7 @@ def ibm_b5(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 cvpt += " and "
             # cvpt += 'rm_val == '+str(rm)
             cvpt =  sanitise(rm,cvpt,iflen,flen,ops,inxFlg)
-            if inxFlg == True:
+            if inxFlg is True:
                 cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
             else:
                 cvpt += ' # '
@@ -1446,9 +1441,8 @@ def ibm_b6(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs2 = -1*(Decimal(rs3) + Decimal(ir_dataset[i][0]))/Decimal(rs1)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -1479,7 +1473,7 @@ def ibm_b6(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 cvpt += " and "
             cvpt =  sanitise(rm,cvpt,iflen,flen,ops,inxFlg)
             # cvpt += 'rm_val == '+str(rm)
-            if inxFlg == True:
+            if inxFlg is True:
                 cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
             else:
                 cvpt += ' # '
@@ -1667,9 +1661,8 @@ def ibm_b7(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs2 = -1*(Decimal(rs3) + Decimal(ir_dataset[i][0]))/Decimal(rs1)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -1699,7 +1692,7 @@ def ibm_b7(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             cvpt += " and "
         # cvpt += 'rm_val == 3'
         cvpt = sanitise(3,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -1891,9 +1884,8 @@ def ibm_b8(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs2 = -1*(Decimal(rs3) + Decimal(ir_dataset[i][0]))/Decimal(rs1)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -1924,7 +1916,7 @@ def ibm_b8(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 cvpt += " and "
             cvpt =  sanitise(rm,cvpt,iflen,flen,ops,inxFlg)
             # cvpt += 'rm_val == '+str(rm)
-            if inxFlg == True:
+            if inxFlg is True:
                 cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
             else:
                 cvpt += ' # '
@@ -2137,7 +2129,7 @@ def ibm_b9(flen, iflen, opcode, ops, inxFlg=False):
             cvpt += " and "
         # cvpt += 'rm_val == 0'
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -2250,7 +2242,7 @@ def ibm_b10(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
             cvpt += " and "
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
         # cvpt += 'rm_val == 0'
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -2557,7 +2549,7 @@ def ibm_b11(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
             cvpt += " and "
         # cvpt += 'rm_val == 0'
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -2662,9 +2654,8 @@ def ibm_b12(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs2 = Decimal(rs1) - Decimal(ir)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
         elif(iflen==32):
@@ -2687,7 +2678,7 @@ def ibm_b12(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             cvpt += " and "
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
         # cvpt += 'rm_val == 0'
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -2787,9 +2778,8 @@ def ibm_b13(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs2 = Decimal(rs1) - Decimal(ir)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
         elif(iflen==32):
@@ -2812,7 +2802,7 @@ def ibm_b13(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             cvpt += " and "
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
         # cvpt += 'rm_val == 0'
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -2954,7 +2944,7 @@ def ibm_b14(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
             cvpt += " and "
         # cvpt += 'rm_val == 0'
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -3282,7 +3272,7 @@ def ibm_b15(flen, iflen, opcode, ops, inxFlg=False, N=-1, seed=-1):
             cvpt += " and "
         # cvpt += 'rm_val == 0'
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -3407,9 +3397,8 @@ def ibm_b16(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs3 = Decimal(ir) + Decimal(rs1)*Decimal(rs2)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -3434,7 +3423,7 @@ def ibm_b16(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             cvpt += " and "
         # cvpt += 'rm_val == 0'
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -3556,9 +3545,8 @@ def ibm_b17(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs3 = Decimal(ir) + Decimal(rs1)*Decimal(rs2)
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -3583,7 +3571,7 @@ def ibm_b17(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             cvpt += " and "
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
         # cvpt += 'rm_val == 0'
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -3773,9 +3761,8 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs3 = Decimal(res) - Decimal(ir_dataset[i][0])
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -3862,9 +3849,8 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs3 = Decimal(res) - Decimal(ir_dataset[i][0])
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -3967,9 +3953,8 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs3 = Decimal(res) - Decimal(ir_dataset[i][0])
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
             x3 = m(rs3)
@@ -3997,7 +3982,7 @@ def ibm_b18(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             cvpt += " and "
         # cvpt += 'rm_val == 0'
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -4177,7 +4162,7 @@ def ibm_b19(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
         # elif opcode in []:
             # cvpt = sanitise(2,cvpt,iflen,flen)
             # cvpt += 'rm_val == 2'
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -4407,9 +4392,8 @@ def ibm_b20(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
                 rs2 = Decimal(ir_dataset[i][0])*Decimal(ir_dataset[i][0])
 
         if(iflen==16):
-            m = lambda rsx: float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) \
-            else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) \
-            else rsx
+            def m(rsx):
+                return float('inf') if rsx > fields_dec_converter(16, hmaxnorm[0]) else float('-inf') if rsx < fields_dec_converter(16, hmaxnorm[1]) else rsx
             x1 = m(rs1)
             x2 = m(rs2)
         elif(iflen==32):
@@ -4434,7 +4418,7 @@ def ibm_b20(flen, iflen, opcode, ops, inxFlg=False, seed=-1):
             cvpt += " and "
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
         # cvpt += 'rm_val == 0'
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -4511,7 +4495,7 @@ def ibm_b21(flen, iflen, opcode, ops, inxFlg=False):
             cvpt += " and "
         if opcode.split('.')[0] in ["fdiv"]:
             cvpt =  sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -4761,7 +4745,7 @@ def ibm_b22(flen, iflen, opcode, ops, inxFlg=False, seed=10):
             cvpt += " and "
         # cvpt += 'rm_val == 0'
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -4859,7 +4843,7 @@ def ibm_b23(flen, iflen, opcode, ops, inxFlg=False):
             else:
                 cvpt = sanitise(rm,cvpt,iflen,flen,ops,inxFlg)
                 # cvpt += str(rm)
-            if inxFlg == True:
+            if inxFlg is True:
                 cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
             else:
                 cvpt += ' # '
@@ -4958,7 +4942,7 @@ def ibm_b24(flen, iflen, opcode, ops, inxFlg=False):
             else:
                 cvpt = sanitise(rm,cvpt,iflen,flen,ops,inxFlg)
                 # cvpt += str(rm)
-            if inxFlg == True:
+            if inxFlg is True:
                 cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
             else:
                 cvpt += ' # '
@@ -5048,14 +5032,14 @@ def ibm_b25(flen, iflen, opcode, ops, inxFlg=False, seed=10):
             # cvpt += 'rm_val == '
             if "fmv" in opcode or opcode in "fcvt.d.wu":
                 cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-                if inxFlg == True:
+                if inxFlg is True:
                     cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
                 else:
                     cvpt += ' # '
                 # cvpt += str(0)
             else:
                 cvpt = sanitise(rm,cvpt,iflen,flen,ops,inxFlg)
-                if inxFlg == True:
+                if inxFlg is True:
                     cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
                 else:
                     cvpt += ' # '
@@ -5123,7 +5107,7 @@ def ibm_b26(xlen, opcode, ops, inxFlg=False, seed=10):
                 # cvpt += str(0)
             else:
                 cvpt = sanitise(rm,cvpt,xlen,xlen,ops,inxFlg)
-                if inxFlg == True:
+                if inxFlg is True:
                     cvpt += sgn_prefix(xlen,inxFlg,ops,cvpt)
                 else:
                     cvpt += ' # '
@@ -5192,7 +5176,7 @@ def ibm_b27(flen, iflen, opcode, ops, inxFlg=False, seed=10):
             cvpt += " and "
         # cvpt += 'rm_val == 0'
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -5332,7 +5316,7 @@ def ibm_b28(flen, iflen, opcode, ops, inxFlg=False, seed=10):
             cvpt += " and "
         # cvpt += 'rm_val == 0'
         cvpt = sanitise(0,cvpt,iflen,flen,ops,inxFlg)
-        if inxFlg == True:
+        if inxFlg is True:
             cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
         else:
             cvpt += ' # '
@@ -5428,7 +5412,7 @@ def ibm_b29(flen, iflen, opcode, ops, inxFlg=False, seed=10):
             else:
                 cvpt = sanitise(rm,cvpt,iflen,flen,ops,inxFlg)
                 # cvpt += str(rm)
-            if inxFlg == True:
+            if inxFlg is True:
                 cvpt += sgn_prefix(iflen,flen,inxFlg,ops,cvpt)
             else:
                 cvpt += ' # '
