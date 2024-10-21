@@ -100,13 +100,13 @@ def create_test(usage_str, node,label,base_isa,max_inst, op_template, randomize,
         logger.info('Writing tests for csr_comb')
         csr_comb_gen.write_test(fprefix, node, usage_str, label, csr_comb_instr_dict)
 
-def ctg(verbose, out, random ,xlen_arg,flen_arg, cgf_file,num_procs,base_isa, max_inst,inxFlag):
+def ctg(verbose, out, env_dir, random ,xlen_arg,flen_arg, cgf_file,num_procs,base_isa, max_inst,inxFlag):
     logger.level(verbose)
     logger.info('****** RISC-V Compliance Test Generator {0} *******'.format(__version__ ))
     logger.info('Copyright (c) 2020, InCore Semiconductors Pvt. Ltd.')
     logger.info('All Rights Reserved.')
     logger.info("Copying env folder to Output directory.")
-    env_dir = os.path.expanduser("~/riscv-arch-test/riscv-test-suite/env")
+    env_dir = os.path.expanduser(env_dir)
     if not os.path.exists(env_dir):
         shutil.copytree(const.env,env_dir)
     xlen = int(xlen_arg)
