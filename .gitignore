@@ -12,3 +12,5 @@ riscv-target/
 
 #ignore venv
 riscv-isac/riscv-env
+riscof_work
+__pycache__
