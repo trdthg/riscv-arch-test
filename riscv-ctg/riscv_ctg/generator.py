@@ -457,6 +457,7 @@ class Generator():
                 merge = "fmv.x.w" in self.opcode
         while inds:
             req_val_comb = conds[inds.pop()]
+            print("[req_val_comb]", req_val_comb)
             if("#nosat" in req_val_comb):
                 d={}
                 soln = []
@@ -520,7 +521,10 @@ class Generator():
                 val_tuple = []
                 for i,key in enumerate(self.val_vars):
                     val_tuple.append(solution[key])
-
+                if req_val_comb == "rs1_val == (-2**(xlen-1)) and rs2_val >= 0 and rs2_val < xlen":
+                    print("[solution]")
+                    for i,key in enumerate(self.val_vars):
+                        print("    [solution]", key, solution[key], hex(solution[key]))
                 def eval_func(cond):
                     for var,val in zip(self.val_vars,val_tuple):
                         locals()[var] = val

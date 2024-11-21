@@ -42,6 +42,7 @@ def create_test(usage_str, node,label,base_isa,max_inst, op_template, randomize,
             fprefix = os.path.join(out_dir,str(label))
             logger.info('Generating Test for :' + str(label) +"-" + opcode)
             formattype  = op_node['formattype']
+            print("[randomize]:", randomize)
             gen = Generator(formattype,op_node,opcode,randomize,xlen,flen,iflen,base_isa,inxFlag)
             op_comb = gen.opcomb(node)
             val_comb = gen.valcomb(node)
@@ -136,5 +137,5 @@ def ctg(verbose, out, random ,xlen_arg,flen_arg, cgf_file,num_procs,base_isa, ma
     cgf = expand_cgf(cgf_file,xlen,flen)
     pool = mp.Pool(num_procs)
     results = pool.starmap(create_test, [(usage_str, node,label,base_isa,max_inst, op_template,
-        randomize, out_dir, xlen, flen, inxFlag) for label,node in cgf.items()])
+        randomize, out_dir, xlen, flen, inxFlag) for label,node in cgf.items() if label == "sraw"])
     pool.close()

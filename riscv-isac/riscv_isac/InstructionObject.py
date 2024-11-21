@@ -202,6 +202,7 @@ class instructionObject():
         self.trap_registers_update(instr_vars,self.trap_dict)
 
         # capture the register operand values
+        print("###########################")
         rs1_val = self.evaluate_instr_var("rs1_val", instr_vars, arch_state)
         rs2_val = self.evaluate_instr_var("rs2_val", instr_vars, arch_state)
         rs3_val = self.evaluate_instr_var("rs3_val", instr_vars, arch_state)
@@ -351,6 +352,9 @@ class instructionObject():
         :param instr_var_name: Name of the instruction variable
         '''
         for cond, func in instr_var_evaluator_funcs.get(instr_var_name, []):
+            instr_vars = args[0]
+            arch_state = args[1]
+
             if cond(
                 instr_name = self.instr_name,
                 rs1 = self.rs1,
@@ -360,7 +364,30 @@ class instructionObject():
                 is_rvp = self.is_rvp,
                 inxFlag = self.inxFlg
             ): # could just instr_name suffice?
-                return func(self, *args)
+                res = func(self, *args)
+                if instr_var_name == "rs1_val" \
+                    and "sraw" in instr_vars['mnemonic']:
+                    # print("[evaluate_rs1_val_sgn]", instr_vars)
+                    reg_idx = self.rs1[0]
+                    # if arch_state.x_rf[reg_idx] == 0x8000000000000000:
+                    print('\n-------------------------------------\n')
+                    print("[evaluate_rs1_val_sgn]", instr_vars)
+                    print("[evaluate_rs1_val_sgn]", func.__name__)
+                    print("[self.rs1]", self.rs1)
+                    print("[hex]", arch_state.x_rf[reg_idx])
+                    print("[res]", res)
+                if instr_var_name == "rs2_val" \
+                    and "sraw" in instr_vars['mnemonic']:
+                    # print("[evaluate_rs1_val_sgn]", instr_vars)
+                    reg_idx = self.rs2[0]
+                    # if arch_state.x_rf[reg_idx] == 0x8000000000000000:
+                    print('\n-------------------------------------\n')
+                    print("[evaluate_rs2_val_sgn]", instr_vars)
+                    print("[evaluate_rs2_val_sgn]", func.__name__)
+                    print("[self.rs2]", self.rs2)
+                    print("[hex]", arch_state.x_rf[reg_idx])
+                    print("[res]", res)
+                return res
 
         return None
 
