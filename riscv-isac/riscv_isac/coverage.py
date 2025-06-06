@@ -1595,6 +1595,8 @@ def compute(trace_file, test_name, cgf, parser_name, decoder_name, detailed, xle
     obj_dict = {} ## (label,coverpoint): object
     for cov_labels,value in cgf.items():
         if cov_labels != 'datasets':
+            with open("guesswhat.txt", "a+") as f:
+                print(value, file=f)
             if 'cross_comb' in value and len(value['cross_comb'])!=0:
                 for coverpt in value['cross_comb'].keys():
                     if(isinstance(coverpt,str)):

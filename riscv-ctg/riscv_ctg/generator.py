@@ -447,6 +447,8 @@ class Generator():
         if 'fcvt' in self.opcode or 'fmv' in self.opcode:
             if self.opcode.split(".")[-1] in ['x','w','wu','l','lu']:
                 merge = "fmv.x.w" in self.opcode
+        # print(conds)
+        # print(inds)
         while inds:
             req_val_comb = conds[inds.pop()]
             if("#nosat" in req_val_comb):
@@ -492,16 +494,28 @@ class Generator():
                     if var not in req_val_comb:
                         dataset = dataset[:1]
                     problem.addVariable(var, dataset)
+                    # print("var")
+                    # print(var)
+                    # print(dataset)
 
                 def condition(*argv):
                     for var,val in zip(self.val_vars,argv):
                         locals()[var]=val
-                    return eval(req_val_comb)
-
+                    try:
+                        return eval(req_val_comb)
+                    except Exception as e:
+                        # print(f"req_val_comb: {req_val_comb}")
+                        raise e
+                        
+                # print("开始了吗?!")
                 problem.addConstraint(condition,tuple(self.val_vars))
                 # if boundconstraint:
                 #     problem.addConstraint(boundconstraint,tuple(['rs1_val', 'imm_val']))
                 solution = problem.getSolution()
+                # print("self.val_vars")
+                # print(self.val_vars)
+                # print("solution")
+                # print(solution)
                 count = 0
                 while (solution is None and count < 5):
                     solution = problem.getSolution()
@@ -892,6 +906,8 @@ class Generator():
             if 'val_comb' in coverpoints:
                 valcomb_hits = OrderedSet([])
                 for coverpoint in coverpoints['val_comb']:
+                    # print("coverpoint 是多少?")
+                    # print(coverpoint)
                     if eval(coverpoint,globals(),var_dict):
                         valcomb_hits.add(coverpoint)
                 cover_hits['val_comb']=valcomb_hits

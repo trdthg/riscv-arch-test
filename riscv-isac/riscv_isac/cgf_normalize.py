@@ -573,6 +573,11 @@ def expand_cgf(cgf_files, xlen,flen, log_redundant=False):
     :type flen: int
     '''
     cgf = utils.load_cgf(cgf_files)
+    
+    # print("合并前的cgf")
+    # print("th_tst")
+    # print(cgf["th_tst"]["val_comb"])
+
     for labels, cats in cgf.items():
         if labels != 'datasets':
             # If 'opcode' found, rename it to 'mnemonics'
@@ -612,8 +617,14 @@ def expand_cgf(cgf_files, xlen,flen, log_redundant=False):
 
             l = len(cats.items())
             i = 0
+            # print(f"top level labels: {labels}")
+            # print(cgf["th_tst"]["val_comb"])
             for label,node in cats.items():
                 if isinstance(node,dict):
+                    # if node is val_comb
+                    # if abstract_comb found
+                    # print(f"val_comb: [labels: {labels} label: {label}]")
+                    # print(cgf["th_tst"]["val_comb"])
                     if 'abstract_comb' in node:
                         temp = node['abstract_comb']
                         del node['abstract_comb']
@@ -621,11 +632,14 @@ def expand_cgf(cgf_files, xlen,flen, log_redundant=False):
                             i = 0
                             try:
                                 exp_cp = eval(coverpoints)
+                                # print("exp_cp")
+                                # print(exp_cp)
                             except Exception as e:
                                 logger.error("Error evaluating abstract comb: "+(coverpoints)\
                                         +" in "+labels+": "+str(e) )
                             else:
                                 for cp,comment in exp_cp:
+                                    # print("我摘错你了", cp, comment, labels, label)
                                     if log_redundant and cp in cgf[labels][label]:
                                         logger.warn(f'Redundant coverpoint during normalization: {cp}')
 
@@ -635,4 +649,8 @@ def expand_cgf(cgf_files, xlen,flen, log_redundant=False):
                                         cgf[labels][label].yaml_add_eol_comment(comment, key=cp)
                                     cgf[labels][label][cp] = coverage
                                     i += 1
-    return dict(cgf)
+    res = dict(cgf)
+    # print("合并后的cgf")
+    # print("th_tst")
+    # print(cgf["th_tst"]["val_comb"])
+    return res

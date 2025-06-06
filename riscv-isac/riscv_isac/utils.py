@@ -170,7 +170,9 @@ class combineReader(object):
                 if not self._to_do:
                     return res
                 else:
-                    self._fp = open(self._to_do.pop(0))
+                    _fp = self._to_do.pop(0)
+                    # print(f'Reading from {_fp}')
+                    self._fp = open(_fp)
             if size is None:
                 data = self._fp.read()
             else:
