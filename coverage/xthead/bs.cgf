@@ -1,0 +1,19 @@
+
+
+th_tst:
+    config: 
+      - check ISA:=regex(.*I.*Xtheadbs)
+    mnemonics: 
+      th.tst: 0
+    rs1: 
+      <<: *all_regs
+    rd: 
+      <<: *all_regs
+    op_comb: 
+      <<: *ifmt_op_comb
+    val_comb:
+      <<: [ *ifmt_val_comb_unsgn, *base_rs1val_unsgn]
+      abstract_comb:
+        'gen_th_tst_comb(6)': 0
+
+

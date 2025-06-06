@@ -194,6 +194,16 @@ def sp_dataset(bit_width,var_lst=["rs1_val","rs2_val"],signed=True):
         coverpoints.append(' and '.join([var_names[i]+"=="+str(entry[i]) for i in range(len(var_names))]))
     return [(coverpoint,"Special Dataset") for coverpoint in coverpoints]
 
+def gen_th_tst_comb(size):
+    res = [
+        (f"rs1_val=={1 << x} and imm_val=={x}", "th_tst rs1_one")
+        for x in range(2**size)
+    ] + [
+        (f"rs1_val==0 and imm_val=={x}", "th_tst rs1_zero")
+        for x in range(2**size)
+    ]
+    return res
+
 def walking_ones(var, size, signed=True, fltr_func=None, scale_func=None):
     '''
     This function converts an abstract walking-ones function into individual

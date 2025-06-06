@@ -1,6 +1,7 @@
 from ordered_set import OrderedSet
 import riscv_isac.plugins as plugins
 
+from riscv_isac.log import logger
 class disassembler():
 
     def __init__(self):
@@ -26,7 +27,8 @@ class disassembler():
             0b1001011: self.fnmsub,
             0b1001111: self.fnmadd,
             0b1010011: self.rv32_rv64_float_ops,
-            0b1110111: self.rvp_ops
+            0b1110111: self.rvp_ops,
+            0b0001011: self.xthead_ops
         }
         """ Instruction Op-Codes dict for 32-bit instructions """
 
@@ -42,6 +44,18 @@ class disassembler():
         self.rvp_rs1_is_64bit_set = OrderedSet('smal add64 radd64 uradd64 kadd64 ukadd64 sub64 rsub64 ursub64 ksub64 uksub64 wext wexti'.split())
         self.rvp_rs2_is_64bit_set = OrderedSet(     'add64 radd64 uradd64 kadd64 ukadd64 sub64 rsub64 ursub64 ksub64 uksub64'.split())
         self.rvp_rd_is_64bit_set  = OrderedSet('smul16 smulx16 umul16 umulx16 smul8 smulx8 umul8 umulx8 smal add64 radd64 uradd64 kadd64 ukadd64 sub64 rsub64 ursub64 ksub64 uksub64 smar64 smsr64 umar64 umsr64 kmar64 kmsr64 ukmar64 ukmsr64 smalbb smalbt smaltt smalda smalxda smalds smaldrs smalxds smslda smslxda mulr64 mulsr64 wext wexti'.split())
+
+    
+    def xthead_ops(self, instrObj):
+        instr = instrObj.instr
+        rs1 = ((instr & self.RS1_MASK) >> 15, 'x')
+        rd = ((instr & self.RD_MASK) >> 7, 'x')
+        imm_val = (instr >> 20) & 0b111111
+        instrObj.instr_name = 'th.tst'
+        instrObj.rs1 = rs1
+        instrObj.rd = rd
+        instrObj.imm = imm_val
+        return instrObj
 
     def init_rvp_dictionary(self):
         # Create RVP Dictiory 0 for instruction:  clrs8  clrs16  clrs32  clo8  clo16  clo32  clz8  clz16  clz32  kabs8  kabs16  kabsw  sunpkd810  sunpkd820  sunpkd830  sunpkd831  sunpkd832  swap8  zunpkd810  zunpkd820  zunpkd830  zunpkd831  zunpkd832  kabs32

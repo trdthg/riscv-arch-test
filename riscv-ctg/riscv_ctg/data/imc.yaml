@@ -327,6 +327,27 @@ addi:
     // opcode: $inst ; op1:$rs1; dest:$rd; op1val:$rs1_val;  immval:$imm_val
     TEST_IMM_OP( $inst, $rd, $rs1, $correctval, $rs1_val, $imm_val, $swreg, $offset, $testreg)
 
+th.tst:
+  sig:
+    stride: 1
+    sz: 'XLEN/8'
+  xlen: [32,64]
+  std_op:
+  isa: 
+    - I_Xtheadbs
+  operation: 'hex((rs1_val >> imm_val) & 1) '
+  rs1_op_data: *all_regs
+  rd_op_data: *all_regs
+  rs1_val_data: 
+    'gen_usign_dataset(xlen)+ gen_sp_dataset(xlen,True)'
+  imm_val_data: 'gen_imm_dataset(6)'
+  formattype: 'iformat'
+  template: |-
+
+    // $comment
+    // opcode: $inst ; op1:$rs1; dest:$rd; op1val:$rs1_val;  immval:$imm_val
+    TEST_IMM_OP( $inst, $rd, $rs1, $correctval, $rs1_val, $imm_val, $swreg, $offset, $testreg)
+
 addiw:
   sig:
     stride: 1

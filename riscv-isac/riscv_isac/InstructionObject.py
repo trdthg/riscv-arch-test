@@ -27,7 +27,7 @@ unsgn_rs1 = ['sw','sd','sh','sb','ld','lw','lwu','lh','lhu','lb', 'lbu','flw','f
         'bset','zext.h','sext.h','sext.b','zext.b','zext.w','minu','maxu','orc.b','add.uw','sh1add.uw',\
         'sh2add.uw','sh3add.uw','slli.uw','clz','clzw','ctz','ctzw','cpop','cpopw','rev8',\
         'bclri','bexti','binvi','bseti','xperm4','xperm8','zip','unzip','gorci','fcvt.d.wu','fcvt.s.wu','fcvt.d.lu','fcvt.s.lu','c.flwsp','c.fldsp','c.flw','c.fld'\
-        'c.not', 'c.sext.b','c.sext.h','c.zext.b','c.zext.h','c.zext.w','sc.w','lr.w','sc.d','lr.d']
+        'c.not', 'c.sext.b','c.sext.h','c.zext.b','c.zext.h','c.zext.w','sc.w','lr.w','sc.d','lr.d', 'th.tst']
 unsgn_rs2 = ['bgeu', 'bltu', 'sltiu', 'sltu', 'sll', 'srl', 'sra', 'sraw', 'mulhu',\
         'mulhsu','divu','remu','divuw','remuw','aes64ds','aes64dsm','aes64es',\
         'aes64esm','aes64ks2','sm4ed','sm4ks','ror','rol','rorw','rolw','clmul',\
@@ -553,7 +553,6 @@ class instructionObject():
     @evaluator_func("rs1_val", lambda **params: params['instr_name'] in unsgn_rs1 and params['rs1'] is not None)
     def evaluate_rs1_val_unsgn(self, instr_vars, arch_state):
         return self.evaluate_reg_val_unsgn(self.rs1[0], instr_vars['xlen'], arch_state)
-
 
     @evaluator_func("rs1_val", lambda **params: params['is_rvp'] and params['rs1'] is not None)
     def evaluate_rs1_val_p_ext(self, instr_vars, arch_state):
